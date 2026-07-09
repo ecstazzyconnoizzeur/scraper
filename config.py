@@ -1,4 +1,4 @@
-URL = "https://www.dlsite.com/maniax/work/=/product_id/RJxxxxxxxx.html"
+URL = "https://www.dlsite.com/maniax/work/=/product_id/RJ01652280.html"
 
 HEADLESS = True
 
