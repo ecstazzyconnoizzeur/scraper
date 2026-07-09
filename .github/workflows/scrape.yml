@@ -1,0 +1,59 @@
+name: Scrape Images
+
+on:
+  # Manual trigger (paling sering digunakan)
+  workflow_dispatch:
+
+  # Otomatis jalan ketika config.py diubah
+  push:
+    paths:
+      - 'config.py'
+      - 'scraper.py'
+      - 'requirements.txt'
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install system dependencies (untuk Playwright)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 libnspr4 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 \
+            libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 \
+            libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 libasound2
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright Chromium
+        run: playwright install chromium --with-deps
+
+      - name: Run Scraper
+        run: python scraper.py
+
+      - name: Commit downloaded images (Opsional)
+        if: success()
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # Cek apakah ada perubahan di folder downloads
+          if git diff --quiet --exit-code downloads/; then
+            echo "No new images to commit"
+          else
+            git add downloads/
+            git commit -m "📥 Update downloaded images - $(date '+%Y-%m-%d %H:%M:%S')" || echo "Nothing to commit"
+            git push
+          fi
